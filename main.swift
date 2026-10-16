@@ -212,8 +212,9 @@ final class Shell {
     /// {fitdpi}: yoğunluk. Ekran kısalınca YouTube "kısa ekran" düzenine geçiyor
     /// (küçük resim solda, yazı sağda); 683dp'de geçti, 768dp'de geçmedi —
     /// ölçüldü. Alt çubuk kaydırırken gizlenip açıldıkça eşiğin iki yanına
-    /// düşüyor ve düzen gidip geliyordu. O yüzden boyu en az 768dp tutacak
-    /// yoğunluk seçilir (1920 piksel için 400; telefonun normali 450).
+    /// düşüyor ve düzen gidip geliyordu. O yüzden yükseklik dp olarak telefonun
+    /// kendi yüksekliğinde tutulur (2340/450 → 832dp; 1920 piksel için 369).
+    /// Uygulamalar telefondaki düzenin aynısını görür; eşikten de uzak kalır.
     func fitSize(dev: String) -> (size: String, dpi: String)? {
         let p = makeProcess("adb \(dev) shell 'wm size; wm density'")
         let pipe = Pipe(); p.standardOutput = pipe; p.standardError = Pipe()
@@ -239,8 +240,7 @@ final class Shell {
         var w = pw
         var h = Int((Double(pw) * Double(sh / sw)).rounded())
         if h > ph { h = ph; w = Int((Double(ph) * Double(sw / sh)).rounded()) }
-        let minHeightDp = 768
-        let dpi = min(physDpi, (h & ~1) * 160 / minHeightDp)
+        let dpi = min(physDpi, physDpi * (h & ~1) / ph)
         return ("\(w & ~1)x\(h & ~1)", "\(dpi)")   // kodlayıcılar çift sayı ister
     }
 

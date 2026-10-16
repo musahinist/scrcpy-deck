@@ -12,9 +12,21 @@ SRC=$(cd "$(dirname "$0")" && pwd)
 cd "$SRC"
 
 xcrun swiftc -swift-version 5 -O -o ScrcpyDeck main.swift -framework AppKit
-cp ScrcpyDeck ScrcpyDeck.app/Contents/MacOS/ScrcpyDeck
-xattr -cr ScrcpyDeck.app
-codesign --force --sign - ScrcpyDeck.app 2>&1 | grep -v "replacing existing signature" || true
+
+# Paketi boş bir geçici klasörde sıfırdan kurup orada imzala. Yerinde
+# imzalamak Mac mini'de aralıklı olarak "resource fork, Finder information,
+# or similar detritus not allowed" veriyordu: xattr -cr ile codesign arasında
+# dosyalara yeniden öznitelik ekleniyor, eski _CodeSignature da kalıyordu.
+STAGE=$(mktemp -d)
+mkdir -p "$STAGE/ScrcpyDeck.app/Contents/MacOS"
+cat ScrcpyDeck.app/Contents/Info.plist > "$STAGE/ScrcpyDeck.app/Contents/Info.plist"
+cat ScrcpyDeck > "$STAGE/ScrcpyDeck.app/Contents/MacOS/ScrcpyDeck"
+chmod +x "$STAGE/ScrcpyDeck.app/Contents/MacOS/ScrcpyDeck"
+codesign --sign - "$STAGE/ScrcpyDeck.app"
+codesign -v "$STAGE/ScrcpyDeck.app"
+rm -rf ScrcpyDeck.app/Contents/MacOS ScrcpyDeck.app/Contents/_CodeSignature
+ditto --noextattr --noqtn "$STAGE/ScrcpyDeck.app" ScrcpyDeck.app
+rm -rf "$STAGE"
 codesign -v ScrcpyDeck.app
 
 # Uygulama önce ~/.config'teki kopyayı okur (launchd + Belgeler izni sorunu).

@@ -6,7 +6,7 @@
     "{save}": "kaydetme penceresi açar",
     "{dev}": "-s <seri no> — menüde seçili cihaz. USB ve kablosuz aynı anda bağlıyken şart.",
     "{fit}": "telefonun genişliği korunup boyu Mac ekranının oranına uydurulmuş çözünürlük (dik TV'de 1080x1920)",
-    "{fitdpi}": "{fit} ile birlikte: boyu en az 768dp tutan yoğunluk (dik TV'de 400). YouTube kısa ekranda yan yana düzene geçiyordu."
+    "{fitdpi}": "{fit} ile birlikte: yüksekliği telefonun kendi dp yüksekliğinde tutan yoğunluk (dik TV'de 369). YouTube kısa ekranda yan yana düzene geçiyordu."
   },
   "_kind": "run = uzun süren, menüden durdurulur | once = kısa, çıktısı pencerede gösterilir | terminal = Terminal'de açılır",
   "_cleanup": "run komutlarında isteğe bağlı: komut nasıl biterse bitsin (durdur, pencere kapandı, çıkış) ardından çalışır",
