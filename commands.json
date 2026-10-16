@@ -23,7 +23,9 @@
   "hotkeys": [
     { "key": "F7", "title": "Önceki video",      "cmd": "adb {dev} shell input keyevent KEYCODE_MEDIA_PREVIOUS" },
     { "key": "F8", "title": "Oynat / duraklat",  "cmd": "adb {dev} shell input keyevent KEYCODE_MEDIA_PLAY_PAUSE" },
-    { "key": "F9", "title": "Sonraki video",     "cmd": "adb {dev} shell input keyevent KEYCODE_MEDIA_NEXT" }
+    { "key": "F9", "title": "Sonraki video",     "cmd": "adb {dev} shell input keyevent KEYCODE_MEDIA_NEXT" },
+    { "key": "pagedown", "title": "Sonraki Short / Reel (parmakla kaydırma)", "cmd": "adb {dev} shell input swipe 540 1450 540 450 120" },
+    { "key": "pageup",   "title": "Önceki Short / Reel",                      "cmd": "adb {dev} shell input swipe 540 450 540 1450 120" }
   ],
   "groups": [
     {

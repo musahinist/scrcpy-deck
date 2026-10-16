@@ -176,7 +176,13 @@ geri bırakılır. `commands.json` → `hotkeys` listesinden değiştirilir
 (`F1`–`F15`, ok tuşları, `ctrl+opt+right` gibi). Bir tuşu başka bir uygulama
 almışsa menüde "kaydedilemedi" yazar.
 
-Telefona Android medya tuşu gider, yani tuşlar medya oturumu olan uygulamalarda
+**PageDown / PageUp** = sonraki / önceki Short (Reels'te de). Fare tekerleği
+telefona tekerlek olarak gider; Shorts sayfa geçişi parmak kaydırması
+beklediği için iki video arasında kalıp oynamıyordu. Bu tuşlar telefona gerçek
+bir parmak kaydırması (`input swipe`) gönderir. Ok tuşları Shorts'ta işe
+yaramıyor (denendi).
+
+F7–F9 için: telefona Android medya tuşu gider, yani tuşlar medya oturumu olan uygulamalarda
 çalışır (YouTube, Netflix). Instagram/X videolarında etkisi olmayabilir.
 
 Ses düzeyi kısayolu yok: scrcpy sesi telefonun ses düzeyinden bağımsız
