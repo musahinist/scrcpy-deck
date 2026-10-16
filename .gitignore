@@ -1,0 +1,5 @@
+# derleme çıktıları — deploy.sh üretir
+/ScrcpyDeck
+/ScrcpyDeck.app/Contents/MacOS/
+/ScrcpyDeck.app/Contents/_CodeSignature/
+.DS_Store
