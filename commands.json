@@ -18,6 +18,12 @@
     "~/Library/Android/sdk/platform-tools",
     "~/.local/opt/scrcpy-macos-aarch64-v4.1"
   ],
+  "_hotkeys": "genel kısayollar: yalnızca bir yansıtma açıkken etkin, odak scrcpy'de olmasa da çalışır. key örnekleri: F8, ctrl+opt+right",
+  "hotkeys": [
+    { "key": "F7", "title": "Önceki video",      "cmd": "adb {dev} shell input keyevent KEYCODE_MEDIA_PREVIOUS" },
+    { "key": "F8", "title": "Oynat / duraklat",  "cmd": "adb {dev} shell input keyevent KEYCODE_MEDIA_PLAY_PAUSE" },
+    { "key": "F9", "title": "Sonraki video",     "cmd": "adb {dev} shell input keyevent KEYCODE_MEDIA_NEXT" }
+  ],
   "groups": [
     {
       "name": "DeX / sanal ekran",
@@ -46,7 +52,7 @@
     {
       "name": "Ekran yansıtma",
       "items": [
-        { "title": "Yansıt — TV'ye sığdır, ekran kapalı (telefon ZATEN açıksa)", "kind": "run", "cmd": "adb {dev} shell wm size {fit} && exec scrcpy {dev} --keyboard=uhid -S -w -f", "cleanup": "adb {dev} shell wm size reset", "phone_cleanup": "wm size reset", "auto": true },
+        { "title": "Yansıt — TV'ye sığdır, ekran kapalı (telefon ZATEN açıksa)", "kind": "run", "cmd": "adb {dev} shell wm size {fit} && exec scrcpy {dev} --keyboard=uhid --video-codec=h265 --video-bit-rate=16M -S -w -f", "cleanup": "adb {dev} shell wm size reset", "phone_cleanup": "wm size reset", "auto": true },
         { "title": "Yansıt — kilit açılabilir (sonra Option+O ile ekranı kapat)", "kind": "run", "cmd": "scrcpy {dev} --keyboard=uhid -w" },
         { "title": "Yansıt — telefonu uyandırıp aç",                        "kind": "run", "cmd": "adb {dev} shell input keyevent KEYCODE_WAKEUP; adb {dev} shell input swipe 540 1900 540 700; scrcpy {dev} --keyboard=uhid -w" },
         { "title": "Yansıt — ekran kapalı (telefon ZATEN açıksa)", "kind": "run", "cmd": "scrcpy {dev} --keyboard=uhid -S -w" },

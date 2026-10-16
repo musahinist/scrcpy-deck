@@ -1,4 +1,5 @@
 import AppKit
+import Carbon.HIToolbox
 
 // ScrcpyDeck — scrcpy / adb komutlarını menü çubuğundan çalıştıran kısayol uygulaması.
 // Komutlar commands.json dosyasından okunur; uygulamayı yeniden derlemeden düzenlenir.
@@ -31,6 +32,9 @@ struct Item {
 
 struct Group { let name: String; let items: [Item] }
 
+/// Genel kısayol: odak scrcpy penceresinde olmasa da çalışır.
+struct HotKey { let key: String; let title: String; let cmd: String }
+
 struct Device {
     let serial: String
     let model: String
@@ -40,6 +44,7 @@ struct Device {
 
 struct Config {
     var groups: [Group] = []
+    var hotkeys: [HotKey] = []
     var pathExtra: [String] = ["/opt/homebrew/bin", "/usr/local/bin",
                                NSHomeDirectory() + "/Library/Android/sdk/platform-tools"]
     var error: String?
@@ -68,8 +73,84 @@ func loadConfig() -> Config {
         }
         c.groups.append(Group(name: name, items: items))
     }
+    c.hotkeys = (o["hotkeys"] as? [[String: Any]] ?? []).compactMap {
+        guard let k = $0["key"] as? String, let cmd = $0["cmd"] as? String else { return nil }
+        return HotKey(key: k, title: $0["title"] as? String ?? k, cmd: cmd)
+    }
     if c.groups.isEmpty { c.error = "commands.json içinde grup yok." }
     return c
+}
+
+// MARK: - Genel kısayollar
+
+/// Carbon RegisterEventHotKey: Erişilebilirlik izni istemez. (Olay dinleyici
+/// izin isterdi ve her derlemede imza değiştiği için izin her deploy'da düşerdi.)
+final class HotKeys {
+    private var refs: [EventHotKeyRef] = []
+    private var actions: [UInt32: () -> Void] = [:]
+    private var installed = false
+
+    private static let keyCodes: [String: Int] = [
+        "f1": kVK_F1, "f2": kVK_F2, "f3": kVK_F3, "f4": kVK_F4, "f5": kVK_F5, "f6": kVK_F6,
+        "f7": kVK_F7, "f8": kVK_F8, "f9": kVK_F9, "f10": kVK_F10, "f11": kVK_F11, "f12": kVK_F12,
+        "f13": kVK_F13, "f14": kVK_F14, "f15": kVK_F15,
+        "left": kVK_LeftArrow, "right": kVK_RightArrow, "up": kVK_UpArrow, "down": kVK_DownArrow,
+        "space": kVK_Space, "pageup": kVK_PageUp, "pagedown": kVK_PageDown,
+    ]
+
+    /// "F8", "ctrl+opt+right" gibi. Tanınmazsa nil.
+    static func parse(_ spec: String) -> (code: UInt32, mods: UInt32)? {
+        var mods = 0
+        var code: Int?
+        for part in spec.lowercased().split(separator: "+").map({ $0.trimmingCharacters(in: .whitespaces) }) {
+            switch part {
+            case "cmd": mods |= cmdKey
+            case "opt", "alt": mods |= optionKey
+            case "ctrl": mods |= controlKey
+            case "shift": mods |= shiftKey
+            default: code = keyCodes[part]
+            }
+        }
+        guard let c = code else { return nil }
+        return (UInt32(c), UInt32(mods))
+    }
+
+    var isActive: Bool { !refs.isEmpty }
+
+    /// Kaydedemediklerinin adını döner (tanınmayan tuş ya da başkası almış).
+    @discardableResult
+    func register(_ list: [(String, () -> Void)]) -> [String] {
+        installHandler()
+        var failed: [String] = []
+        for (i, (spec, action)) in list.enumerated() {
+            guard let k = HotKeys.parse(spec) else { failed.append(spec); continue }
+            var ref: EventHotKeyRef?
+            let id = EventHotKeyID(signature: OSType(0x53_44_43_4B), id: UInt32(i + 1))  // 'SDCK'
+            if RegisterEventHotKey(k.code, k.mods, id, GetApplicationEventTarget(), 0, &ref) == noErr, let r = ref {
+                refs.append(r); actions[UInt32(i + 1)] = action
+            } else { failed.append(spec) }
+        }
+        return failed
+    }
+
+    func unregisterAll() {
+        for r in refs { UnregisterEventHotKey(r) }
+        refs.removeAll(); actions.removeAll()
+    }
+
+    private func installHandler() {
+        guard !installed else { return }
+        installed = true
+        var type = EventTypeSpec(eventClass: OSType(kEventClassKeyboard), eventKind: UInt32(kEventHotKeyPressed))
+        InstallEventHandler(GetApplicationEventTarget(), { _, event, ud in
+            var id = EventHotKeyID()
+            GetEventParameter(event, EventParamName(kEventParamDirectObject), EventParamType(typeEventHotKeyID),
+                              nil, MemoryLayout<EventHotKeyID>.size, nil, &id)
+            let me = Unmanaged<HotKeys>.fromOpaque(ud!).takeUnretainedValue()
+            me.actions[id.id]?()
+            return noErr
+        }, 1, &type, Unmanaged.passUnretained(self).toOpaque(), nil)
+    }
 }
 
 // MARK: - Kabuk
@@ -241,6 +322,8 @@ final class Controller: NSObject, NSMenuDelegate {
     private var deviceText = "cihaz aranıyor…"
     private var timer: Timer?
     private var hadUSB = false   // son kontrolde USB'li cihaz var mıydı
+    private let hotKeys = HotKeys()
+    private var hotKeyFailed: [String] = []
 
     /// Otomatik başlatma makineye özeldir (commands.json iki Mac'te aynı):
     /// Mac mini'de açık, MacBook'ta kapalı. Menüden değiştirilir.
@@ -266,6 +349,7 @@ final class Controller: NSObject, NSMenuDelegate {
     }
 
     private func reload() {
+        hotKeys.unregisterAll()   // yeni listeyle refreshIcon yeniden kaydeder
         config = loadConfig()
         shell = Shell(pathExtra: config.pathExtra)
     }
@@ -327,6 +411,22 @@ final class Controller: NSObject, NSMenuDelegate {
         b.image = img
         b.title = running.isEmpty ? "" : " \(running.count)"
         b.toolTip = "ScrcpyDeck — \(deviceText)"
+        updateHotKeys()
+    }
+
+    /// Kısayollar yalnızca bir yansıtma açıkken etkin; yoksa F8 gibi tuşlar
+    /// Mac'te başka hiçbir yerde çalışmazdı.
+    private func updateHotKeys() {
+        let want = !running.isEmpty && !config.hotkeys.isEmpty
+        if want == hotKeys.isActive { return }
+        if !want { hotKeys.unregisterAll(); return }
+        hotKeyFailed = hotKeys.register(config.hotkeys.map { hk in
+            (hk.key, { [weak self] in
+                guard let self = self else { return }
+                let cmd = hk.cmd.replacingOccurrences(of: "{dev}", with: self.devFlag())
+                self.shell.capture(cmd, timeout: 10) { _ in }
+            })
+        })
     }
 
     // MARK: Menü
@@ -379,6 +479,15 @@ final class Controller: NSObject, NSMenuDelegate {
             let parent = NSMenuItem(title: g.name, action: nil, keyEquivalent: "")
             parent.isEnabled = true; parent.submenu = sub
             menu.addItem(parent)
+        }
+
+        if !config.hotkeys.isEmpty {
+            menu.addItem(.separator())
+            info(menu, "Kısayollar (yansıtma açıkken):")
+            for hk in config.hotkeys {
+                let bad = hotKeyFailed.contains(hk.key) ? "  — kaydedilemedi" : ""
+                info(menu, "  \(hk.key)  \(hk.title)\(bad)")
+            }
         }
 
         menu.addItem(.separator())
@@ -533,6 +642,7 @@ final class Controller: NSObject, NSMenuDelegate {
 
     @objc private func reloadConfig() {
         reload()
+        refreshIcon()
         alert("Yeniden yüklendi", config.error ?? "\(config.groups.count) grup, \(config.groups.reduce(0){ $0 + $1.items.count }) komut yüklendi.")
     }
 

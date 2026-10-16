@@ -160,6 +160,28 @@ kendiliğinden başlar. Uygulama 5 saniyede bir bakar.
 - Kablo gevşeyip bağlantı geri gelirse yeniden bağlanır.
 - Mac mini açılırken telefon takılıysa da başlar.
 
+## Medya kısayolları
+
+Bir yansıtma açıkken **F7 / F8 / F9** = önceki / oynat-duraklat / sonraki.
+Odak scrcpy penceresinde olmasa da çalışır; yansıtma yokken tuşlar Mac'e
+geri bırakılır. `commands.json` → `hotkeys` listesinden değiştirilir
+(`F1`–`F15`, ok tuşları, `ctrl+opt+right` gibi). Bir tuşu başka bir uygulama
+almışsa menüde "kaydedilemedi" yazar.
+
+Telefona Android medya tuşu gider, yani tuşlar medya oturumu olan uygulamalarda
+çalışır (YouTube, Netflix). Instagram/X videolarında etkisi olmayabilir.
+
+Ses düzeyi kısayolu yok: scrcpy sesi telefonun ses düzeyinden bağımsız
+yakalıyor, macOS da HDMI çıkışının sesini değiştiremiyor. Ses için TV kumandası.
+
+## Görüntü kalitesi (TV modu)
+
+TV modu donanımsal H.265 (`c2.exynos.hevc.encoder`) ve 16 Mbit kullanır.
+Varsayılan H.264 / 8 Mbit'ti. Çözünürlük zaten TV'yle birebir (1080x1920),
+artırılacak bir şey yok; kazanç hızlı hareketli sahnelerde daha az bloklanma.
+Gecikme ya da takılma olursa `commands.json`'da TV komutundan
+`--video-codec=h265 --video-bit-rate=16M` kısmını sil.
+
 ## Cihaz seçimi
 
 "Kablosuz bağlan" dedikten sonra telefon **iki kez** bağlı görünür: USB ve
