@@ -6,6 +6,7 @@
 #   bash deploy.sh           # bu Mac + Mac mini
 #   bash deploy.sh --here    # yalnızca bu Mac
 set -eu
+trap 'echo "deploy.sh HATA: $(hostname -s), satır $LINENO — yarıda kaldı, kurulum yapılmadı" >&2' ERR
 MINI=${MINI:-mshns-mac-mini.local}
 SRC=$(cd "$(dirname "$0")" && pwd)
 cd "$SRC"
@@ -13,7 +14,8 @@ cd "$SRC"
 xcrun swiftc -swift-version 5 -O -o ScrcpyDeck main.swift -framework AppKit
 cp ScrcpyDeck ScrcpyDeck.app/Contents/MacOS/ScrcpyDeck
 xattr -cr ScrcpyDeck.app
-codesign --force --sign - ScrcpyDeck.app 2>/dev/null
+codesign --force --sign - ScrcpyDeck.app 2>&1 | grep -v "replacing existing signature" || true
+codesign -v ScrcpyDeck.app
 
 # Uygulama önce ~/.config'teki kopyayı okur (launchd + Belgeler izni sorunu).
 if [ -d "$HOME/.config/scrcpy-deck" ]; then

@@ -5,7 +5,8 @@
     "{file}": "dosya seçme penceresi açar",
     "{save}": "kaydetme penceresi açar",
     "{dev}": "-s <seri no> — menüde seçili cihaz. USB ve kablosuz aynı anda bağlıyken şart.",
-    "{fit}": "telefonun genişliği korunup boyu Mac ekranının oranına uydurulmuş çözünürlük (dik TV'de 1080x1920)"
+    "{fit}": "telefonun genişliği korunup boyu Mac ekranının oranına uydurulmuş çözünürlük (dik TV'de 1080x1920)",
+    "{fitdpi}": "{fit} ile birlikte: boyu en az 768dp tutan yoğunluk (dik TV'de 400). YouTube kısa ekranda yan yana düzene geçiyordu."
   },
   "_kind": "run = uzun süren, menüden durdurulur | once = kısa, çıktısı pencerede gösterilir | terminal = Terminal'de açılır",
   "_cleanup": "run komutlarında isteğe bağlı: komut nasıl biterse bitsin (durdur, pencere kapandı, çıkış) ardından çalışır",
@@ -52,7 +53,7 @@
     {
       "name": "Ekran yansıtma",
       "items": [
-        { "title": "Yansıt — TV'ye sığdır, ekran kapalı (telefon ZATEN açıksa)", "kind": "run", "cmd": "adb {dev} shell wm size {fit} && exec scrcpy {dev} --keyboard=uhid --video-codec=h265 --video-bit-rate=16M -S -w -f", "cleanup": "adb {dev} shell wm size reset", "phone_cleanup": "wm size reset", "auto": true },
+        { "title": "Yansıt — TV'ye sığdır, ekran kapalı (telefon ZATEN açıksa)", "kind": "run", "cmd": "adb {dev} shell 'wm size {fit} && wm density {fitdpi}' && exec scrcpy {dev} --keyboard=uhid --video-codec=h265 --video-bit-rate=16M -S -w -f", "cleanup": "adb {dev} shell 'wm size reset; wm density reset'", "phone_cleanup": "wm size reset; wm density reset", "auto": true },
         { "title": "Yansıt — kilit açılabilir (sonra Option+O ile ekranı kapat)", "kind": "run", "cmd": "scrcpy {dev} --keyboard=uhid -w" },
         { "title": "Yansıt — telefonu uyandırıp aç",                        "kind": "run", "cmd": "adb {dev} shell input keyevent KEYCODE_WAKEUP; adb {dev} shell input swipe 540 1900 540 700; scrcpy {dev} --keyboard=uhid -w" },
         { "title": "Yansıt — ekran kapalı (telefon ZATEN açıksa)", "kind": "run", "cmd": "scrcpy {dev} --keyboard=uhid -S -w" },
@@ -74,7 +75,7 @@
         { "title": "Telefonu uyandır",              "kind": "once", "cmd": "adb {dev} shell input keyevent KEYCODE_WAKEUP && echo 'Telefon uyandırıldı'" },
         { "title": "Kilit ekranını kaydır (PIN ekranı gelsin)", "kind": "once", "cmd": "adb {dev} shell input keyevent KEYCODE_WAKEUP; sleep 1; adb {dev} shell input swipe 540 1900 540 700; echo 'Kaydırıldı — PIN ekranı gelmiş olmalı'" },
         { "title": "Kilit durumu",              "kind": "once", "cmd": "adb {dev} shell dumpsys trust | grep -oE 'deviceLocked=[01]'; adb {dev} shell dumpsys power | grep -m1 'mWakefulness='" },
-        { "title": "Telefon çözünürlüğünü sıfırla (TV modundan kalırsa)", "kind": "once", "cmd": "adb {dev} shell wm size reset && adb {dev} shell wm size" },
+        { "title": "Telefon çözünürlüğünü sıfırla (TV modundan kalırsa)", "kind": "once", "cmd": "adb {dev} shell 'wm size reset; wm density reset; wm size; wm density'" },
         { "title": "Model ve çözünürlük",        "kind": "once", "cmd": "adb {dev} shell getprop ro.product.model; adb {dev} shell wm size; adb {dev} shell wm density" },
         { "title": "Yüklü uygulamaları listele", "kind": "terminal", "cmd": "scrcpy {dev} --list-apps" },
         { "title": "Ekranları listele",          "kind": "terminal", "cmd": "scrcpy {dev} --list-displays" },

@@ -126,6 +126,13 @@ için olanıdır. Telefonun ekran çözünürlüğünü geçici olarak TV'nin or
 TV'yi kenar boşluğu olmadan doldurur. scrcpy kapanınca `wm size reset` ile
 eski hâline döner.
 
+Yoğunluk da değişir (`wm density 400`, normali 450). Sebep YouTube: ekran
+1080x1920'de 683dp boyunda kalınca "kısa ekran" düzenine geçiyor (küçük
+resim solda, yazı sağda). Alt çubuk kaydırırken gizlenip açıldıkça eşiğin
+iki yanına düşüyor ve düzen gidip geliyordu. 400'de boy 768dp olur, düzen
+telefondaki gibi alt alta kalır; bedeli yazıların ~%11 küçülmesi. Ölçüm:
+683dp yan yana, 768dp ve 832dp alt alta.
+
 Kablo çekilirse veya Mac uykuya geçerse Mac'in sıfırlaması telefona
 ulaşamaz. Bunun için komut başlarken telefona bir bekçi bırakılır
 (`phone_cleanup`, `/data/local/tmp/scrcpydeck-watch.sh`): scrcpy'nin telefondaki

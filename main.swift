@@ -25,7 +25,7 @@ struct Item {
     let auto: Bool        // kablo takılınca kendiliğinden başlayacak komut
     var id: String { "\(title)|\(cmd)" }
     var needsIP: Bool   { cmd.contains("{ip}") }
-    var needsFit: Bool  { cmd.contains("{fit}") }
+    var needsFit: Bool  { cmd.contains("{fit}") || cmd.contains("{fitdpi}") }
     var needsFile: Bool { cmd.contains("{file}") }
     var needsSave: Bool { cmd.contains("{save}") }
 }
@@ -208,8 +208,14 @@ final class Shell {
     /// uydurulmuş çözünürlük. Dik TV'de (1080x1920) telefon 1080x1920 olur,
     /// yansıtma ekranı kenar boşluğu olmadan doldurur. Ekran yataysa telefonun
     /// kendi çözünürlüğü döner, yani hiçbir şey değişmez.
-    func fitSize(dev: String) -> String? {
-        let p = makeProcess("adb \(dev) shell wm size")
+    ///
+    /// {fitdpi}: yoğunluk. Ekran kısalınca YouTube "kısa ekran" düzenine geçiyor
+    /// (küçük resim solda, yazı sağda); 683dp'de geçti, 768dp'de geçmedi —
+    /// ölçüldü. Alt çubuk kaydırırken gizlenip açıldıkça eşiğin iki yanına
+    /// düşüyor ve düzen gidip geliyordu. O yüzden boyu en az 768dp tutacak
+    /// yoğunluk seçilir (1920 piksel için 400; telefonun normali 450).
+    func fitSize(dev: String) -> (size: String, dpi: String)? {
+        let p = makeProcess("adb \(dev) shell 'wm size; wm density'")
         let pipe = Pipe(); p.standardOutput = pipe; p.standardError = Pipe()
         guard (try? p.run()) != nil else { return nil }
         let d = pipe.fileHandleForReading.readDataToEndOfFile(); p.waitUntilExit()
@@ -218,17 +224,24 @@ final class Shell {
         let nums = s[r].dropFirst("Physical size: ".count).split(separator: "x").compactMap { Int($0) }
         guard nums.count == 2 else { return nil }
         let pw = min(nums[0], nums[1]), ph = max(nums[0], nums[1])
+        var physDpi = 0
+        if let dr = s.range(of: #"Physical density: (\d+)"#, options: .regularExpression) {
+            physDpi = Int(s[dr].dropFirst("Physical density: ".count)) ?? 0
+        }
+        guard physDpi > 0 else { return nil }
 
         // Menü çubuğunun olduğu ekran; scrcpy tam ekranı orada açar.
         guard let screen = NSScreen.screens.first else { return nil }
         let sw = screen.frame.width * screen.backingScaleFactor
         let sh = screen.frame.height * screen.backingScaleFactor
-        guard sh > sw else { return "\(pw)x\(ph)" }
+        guard sh > sw else { return ("\(pw)x\(ph)", "\(physDpi)") }
 
         var w = pw
         var h = Int((Double(pw) * Double(sh / sw)).rounded())
         if h > ph { h = ph; w = Int((Double(ph) * Double(sw / sh)).rounded()) }
-        return "\(w & ~1)x\(h & ~1)"   // kodlayıcılar çift sayı ister
+        let minHeightDp = 768
+        let dpi = min(physDpi, (h & ~1) * 160 / minHeightDp)
+        return ("\(w & ~1)x\(h & ~1)", "\(dpi)")   // kodlayıcılar çift sayı ister
     }
 
     /// Telefona, scrcpy sunucusu bitince `cleanup`ı çalıştıran bir bekçi bırakır.
@@ -540,7 +553,8 @@ final class Controller: NSObject, NSMenuDelegate {
             guard let fit = shell.fitSize(dev: devFlag()) else {
                 alert("Çözünürlük okunamadı", "Telefonun ekran boyutu okunamadı. USB ile bağlı mı?"); return
             }
-            cmd = cmd.replacingOccurrences(of: "{fit}", with: fit)
+            cmd = cmd.replacingOccurrences(of: "{fitdpi}", with: fit.dpi)
+                     .replacingOccurrences(of: "{fit}", with: fit.size)
         }
         if item.needsFile {
             guard let p = pickFile() else { return }
