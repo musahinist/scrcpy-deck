@@ -156,6 +156,10 @@ Bir kez yapılır: yansıtma açıkken **Option+K** ile telefonun fiziksel klavy
 ayarı açılır, oradan düzeni **Türkçe (Q)** yap. Mac'in düzeni de Türkçe Q
 (Turkish-QWERTY-PC) olduğu için tuşlar birebir eşleşir.
 
+TV modu açılınca **YouTube baştan açılır**. Bu düzen için de gerekli:
+YouTube zaten açıkken boyut/yoğunluk değişirse düzenini yenilemiyor ve yan
+yana görünümde kalıyordu.
+
 ## Kablo takılınca otomatik TV modu
 
 `commands.json`'da `"auto": true` olan komut (TV modu), menüde **"Kablo

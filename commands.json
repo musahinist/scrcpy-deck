@@ -12,6 +12,7 @@
   "_cleanup": "run komutlarında isteğe bağlı: komut nasıl biterse bitsin (durdur, pencere kapandı, çıkış) ardından çalışır",
   "_auto": "true olan run komutu, menüde 'Kablo takılınca otomatik başlat' açıksa telefon USB ile takılınca kendiliğinden başlar. Aç/kapa her Mac'te ayrıdır.",
   "_path_extra": "iki Mac'in yolları birlikte; olmayan dizin zararsız. Böylece bu dosya iki Mac'te de aynı.",
+  "_tv_youtube": "TV modu açılınca YouTube'u baştan açar (istenen bu). Baştan açmak düzen için de şart: YouTube açıkken yoğunluk değişirse düzenini yenilemiyor, yan yana görünümde kalıyordu.",
   "_phone_cleanup": "run komutlarında isteğe bağlı: telefonda çalışan komut; scrcpy bağlantısı nasıl koparsa kopsun (kablo çekildi, Mac uyudu) telefonun kendisi çalıştırır",
   "path_extra": [
     "/opt/homebrew/bin",
@@ -55,7 +56,7 @@
     {
       "name": "Ekran yansıtma",
       "items": [
-        { "title": "Yansıt — TV'ye sığdır, ekran kapalı (telefon ZATEN açıksa)", "kind": "run", "cmd": "adb {dev} shell 'wm size {fit} && wm density {fitdpi}' && exec scrcpy {dev} --keyboard=uhid --video-codec=h265 --video-bit-rate=16M -S -w -f", "cleanup": "adb {dev} shell 'wm size reset; wm density reset'", "phone_cleanup": "wm size reset; wm density reset", "auto": true },
+        { "title": "Yansıt — TV (YouTube açılır, telefon ekranı kapalı)", "kind": "run", "cmd": "adb {dev} shell 'wm size {fit} && wm density {fitdpi}; am force-stop com.google.android.youtube; monkey -p com.google.android.youtube -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1; true' && exec scrcpy {dev} --keyboard=uhid --video-codec=h265 --video-bit-rate=16M -S -w -f", "cleanup": "adb {dev} shell 'wm size reset; wm density reset'", "phone_cleanup": "wm size reset; wm density reset", "auto": true },
         { "title": "Yansıt — kilit açılabilir (sonra Option+O ile ekranı kapat)", "kind": "run", "cmd": "scrcpy {dev} --keyboard=uhid -w" },
         { "title": "Yansıt — telefonu uyandırıp aç",                        "kind": "run", "cmd": "adb {dev} shell input keyevent KEYCODE_WAKEUP; adb {dev} shell input swipe 540 1900 540 700; scrcpy {dev} --keyboard=uhid -w" },
         { "title": "Yansıt — ekran kapalı (telefon ZATEN açıksa)", "kind": "run", "cmd": "scrcpy {dev} --keyboard=uhid -S -w" },
