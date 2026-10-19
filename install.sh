@@ -6,6 +6,14 @@ DEST="$HOME/Applications"
 AGENT="$HOME/Library/LaunchAgents/local.scrcpydeck.plist"
 mkdir -p "$DEST" "$(dirname "$AGENT")"
 
+if [ ! -x "$SRC/ScrcpyDeck.app/Contents/MacOS/ScrcpyDeck" ]; then
+  echo "Uygulama henuz derlenmemis. Derleyip kurmak icin:  bash $SRC/deploy.sh --here"
+  exit 1
+fi
+# Komut listesi yoksa repodakini koy; varsa (elle duzenlenmis olabilir) dokunma.
+CONF="$HOME/.config/scrcpy-deck/commands.json"
+[ -f "$CONF" ] || { mkdir -p "$(dirname "$CONF")"; cp "$SRC/commands.json" "$CONF"; }
+
 launchctl bootout "gui/$(id -u)/local.scrcpydeck" 2>/dev/null || true
 pkill -f 'ScrcpyDeck.app/Contents/MacOS/ScrcpyDeck' 2>/dev/null || true
 sleep 1

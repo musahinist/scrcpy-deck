@@ -3,3 +3,6 @@
 /ScrcpyDeck.app/Contents/MacOS/
 /ScrcpyDeck.app/Contents/_CodeSignature/
 .DS_Store
+
+# ikinci Mac’in ssh adresi — kişiye özel, bkz. deploy.sh
+/.deploy-host

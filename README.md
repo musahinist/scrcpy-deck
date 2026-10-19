@@ -1,17 +1,25 @@
 # ScrcpyDeck
 
-Menü çubuğundan scrcpy ve adb komutlarını çalıştıran kısayol uygulaması.
-Telefon: Galaxy A17 5G (SM-A176B).
+Menü çubuğundan [scrcpy](https://github.com/Genymobile/scrcpy) ve adb
+komutlarını çalıştıran macOS kısayol uygulaması. Galaxy A17 5G (SM-A176B)
+ile denendi; komutlar `commands.json`'da durduğu için başka Android
+telefonlara da uyarlanabilir.
+
+## Gereksinimler
+
+- macOS, Xcode Command Line Tools (`xcode-select --install`) — `swiftc` için
+- scrcpy ve adb: `brew install scrcpy android-platform-tools`
+- Telefonda USB hata ayıklama açık
 
 ## Nerede ne var
 
 | Ne | Nerede |
 |---|---|
-| Komut listesi (düzenlenebilir) | `~/Documents/scrcpy-deck/commands.json` |
-| Kaynak kod | `~/Documents/scrcpy-deck/main.swift` |
+| Komut listesi (repodaki asıl kopya) | `commands.json` |
+| Uygulamanın okuduğu kopya | `~/.config/scrcpy-deck/commands.json` |
+| Kaynak kod | `main.swift` |
 | Kurulu uygulama | `~/Applications/ScrcpyDeck.app` |
 | Girişte başlatan tanım | `~/Library/LaunchAgents/local.scrcpydeck.plist` |
-| Ayrıntılı komut notları | `~/Documents/scrcpy-komutlari.md` |
 
 ## Kullanım
 
@@ -28,8 +36,10 @@ tekrar tıklayınca durur. Menünün üstündeki "Çalışanlar" bölümünden v
 
 ## Komut eklemek
 
-`commands.json` dosyasını düzenle (menüden "Komutları düzenle…"), sonra
-menüden "Yeniden yükle" de. Uygulamayı yeniden derlemene gerek yok.
+Menüden "Komutları düzenle…" `~/.config/scrcpy-deck/commands.json`'ı açar;
+düzenleyip "Yeniden yükle" de. Uygulamayı yeniden derlemene gerek yok.
+Değişikliği kalıcı tutmak istersen repodaki `commands.json`'ı düzenleyip
+`deploy.sh` çalıştır — o, `~/.config`'teki kopyanın üzerine yazar.
 
 Her komutun `kind` alanı davranışını belirler:
 
@@ -60,21 +70,30 @@ başlatmada kullanılıyor).
 
 ## Kurulum / kaldırma
 
-    bash ~/Documents/scrcpy-deck/install.sh      # root gerekmez
-    bash ~/Documents/scrcpy-deck/uninstall.sh
+    git clone https://github.com/musahinist/scrcpy-deck.git
+    cd scrcpy-deck
+    bash deploy.sh --here     # derler, imzalar (ad-hoc), kurar — root gerekmez
+    bash uninstall.sh         # kaldırır
 
-Kaynak kodu ya da `commands.json`'ı değiştirdiysen tek komut:
+Uygulama girişte kendiliğinden başlar (LaunchAgent). Sonradan yalnızca
+yeniden başlatmak için `bash install.sh` yeter.
 
-    bash ~/Documents/scrcpy-deck/deploy.sh          # bu Mac + Mac mini
-    bash ~/Documents/scrcpy-deck/deploy.sh --here   # yalnızca bu Mac
+Kaynak kodu ya da `commands.json`'ı değiştirdiysen yine `bash deploy.sh`.
+Yansıtma açık olan Mac'te uygulama yeniden başlatılmaz; bitince menüden
+"Yeniden yükle" (yalnızca komutlar değiştiyse) ya da `install.sh`.
 
-Derler, imzalar, kurar; sonra Mac mini'ye (`ssh mshns-mac-mini.local`)
-kopyalayıp orada da aynısını yapar. `commands.json` iki Mac'te birebir
-aynıdır. Yansıtma açık olan Mac'te uygulama yeniden başlatılmaz; bitince
-menüden "Yeniden yükle" (yalnızca komutlar değiştiyse) ya da `install.sh`.
+### İkinci bir Mac (ör. TV'ye bağlı Mac mini)
 
-Proje git'te. Asıl kopya MacBook'taki; Mac mini'ye `deploy.sh` ile gider,
-orada elle değişiklik yapma (bir sonraki deploy üzerine yazar).
+`deploy.sh`, ssh ile ulaşılabilen ikinci bir Mac'e de kurabilir. Adresini
+repo kökünde `.deploy-host` dosyasına yaz (git'e girmez) ya da `MINI`
+ortam değişkeniyle ver:
+
+    echo my-mac-mini.local > .deploy-host
+    bash deploy.sh            # bu Mac + ikinci Mac
+
+Kaynaklar oraya `~/Documents/scrcpy-deck` altına kopyalanıp orada derlenir.
+Asıl kopya bu repo; ikinci Mac'te elle değişiklik yapma (bir sonraki deploy
+üzerine yazar).
 
 ## Telefon kilitliyken çalışmak — DeX kullan
 
@@ -219,4 +238,9 @@ kaldığı için "Cihaz" bölümü de kaybolur.
 - Bir `run` komutu ilk 10 saniyede hata verip çıkarsa çıktısı bir pencerede
   gösterilir. Sessizce başarısız olmaz.
 - DeX çözünürlüğü ekrana göre hesaplanmıştır (Mac 1800x1169 @2x, çentik payı
-  düşülmüş = 3600x2262). Ekran değişirse `scrcpy-komutlari.md` 8. bölüme bak.
+  düşülmüş = 3600x2262). Başka bir ekranda `commands.json`'daki DeX
+  komutlarının `--new-display=` değerini kendi ekranına göre değiştir.
+
+## Lisans
+
+MIT — bkz. [LICENSE](LICENSE).

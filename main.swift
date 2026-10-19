@@ -4,14 +4,9 @@ import Carbon.HIToolbox
 // ScrcpyDeck — scrcpy / adb komutlarını menü çubuğundan çalıştıran kısayol uygulaması.
 // Komutlar commands.json dosyasından okunur; uygulamayı yeniden derlemeden düzenlenir.
 
-// Önce ~/.config: Belgeler klasörü TCC izni ister ve launchd'den başlayan
-// uygulamaya bu izin sorusu hiç gösterilmeyebilir (Mac mini'de böyle oldu).
-let configPath: String = {
-    let home = NSHomeDirectory()
-    let preferred = home + "/.config/scrcpy-deck/commands.json"
-    if FileManager.default.fileExists(atPath: preferred) { return preferred }
-    return home + "/Documents/scrcpy-deck/commands.json"
-}()
+// ~/.config'te: Belgeler klasörü TCC izni ister ve launchd'den başlayan
+// uygulamaya bu izin sorusu hiç gösterilmeyebilir. install.sh/deploy.sh koyar.
+let configPath = NSHomeDirectory() + "/.config/scrcpy-deck/commands.json"
 
 // MARK: - Model
 
